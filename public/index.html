@@ -163,25 +163,45 @@ body.menu-open .mobile-menu { display: block; }
 .hero {
   padding: 44px 0 40px;
 }
+.hero-shell {
+  position: relative;
+  min-height: 620px;
+  padding: 42px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: url('/hero-bg.jpg') center/cover no-repeat;
+  border: 1px solid rgba(115, 109, 98, 0.16);
+  box-shadow: var(--shadow);
+  isolation: isolate;
+}
+.hero-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(251, 248, 242, 0.97) 0%, rgba(251, 248, 242, 0.93) 34%, rgba(251, 248, 242, 0.4) 58%, rgba(13, 17, 23, 0.24) 74%, rgba(13, 17, 23, 0.66) 100%),
+    radial-gradient(circle at top left, rgba(21, 101, 255, 0.14), transparent 34%);
+  z-index: -1;
+}
 .hero-grid {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
   gap: 28px;
   align-items: stretch;
+  min-height: calc(620px - 84px);
 }
 .hero-copy,
 .hero-visual {
-  border-radius: var(--radius-xl);
-  overflow: hidden;
   min-height: 100%;
 }
 .hero-copy {
-  padding: 42px;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.76)),
-    radial-gradient(circle at top left, rgba(21, 101, 255, 0.09), transparent 38%);
-  border: 1px solid rgba(115, 109, 98, 0.16);
-  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.hero-copy-main {
+  max-width: 580px;
 }
 .hero-tag {
   display: inline-flex;
@@ -226,18 +246,20 @@ body.menu-open .mobile-menu { display: block; }
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 28px;
+  margin-bottom: 0;
 }
 .hero-highlights {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  margin-top: auto;
 }
 .hero-highlight {
   padding: 16px;
   border-radius: 18px;
-  background: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.74);
   border: 1px solid rgba(115, 109, 98, 0.12);
+  backdrop-filter: blur(10px);
 }
 .hero-highlight strong {
   display: block;
@@ -251,23 +273,19 @@ body.menu-open .mobile-menu { display: block; }
   color: var(--stone-dark);
 }
 .hero-visual {
-  position: relative;
-  min-height: 560px;
-  padding: 26px;
-  background:
-    linear-gradient(180deg, rgba(8, 15, 31, 0.15), rgba(8, 15, 31, 0.48)),
-    url('/hero-bg.jpg') center/cover no-repeat;
   display: flex;
   align-items: flex-end;
+  justify-content: flex-end;
 }
 .hero-glass {
-  width: 100%;
+  width: min(100%, 430px);
   border-radius: 24px;
   padding: 22px;
-  background: rgba(255,255,255,0.14);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(19, 25, 34, 0.34);
+  border: 1px solid rgba(255,255,255,0.22);
   backdrop-filter: blur(12px);
   color: white;
+  box-shadow: 0 24px 60px rgba(8, 15, 31, 0.24);
 }
 .hero-glass h2 {
   font-family: 'Syne', sans-serif;
@@ -672,7 +690,16 @@ footer {
   .contact-grid {
     grid-template-columns: 1fr;
   }
-  .hero-visual { min-height: 460px; }
+  .hero-shell {
+    min-height: auto;
+  }
+  .hero-shell::before {
+    background:
+      linear-gradient(180deg, rgba(251, 248, 242, 0.97) 0%, rgba(251, 248, 242, 0.92) 46%, rgba(13, 17, 23, 0.22) 72%, rgba(13, 17, 23, 0.72) 100%),
+      radial-gradient(circle at top left, rgba(21, 101, 255, 0.14), transparent 40%);
+  }
+  .hero-grid { min-height: auto; }
+  .hero-visual { min-height: 360px; }
 }
 
 @media (max-width: 900px) {
@@ -689,18 +716,18 @@ footer {
   .site-header { position: sticky; }
   .nav-shell { min-height: 68px; }
   .hero { padding-top: 24px; }
-  .hero-copy,
-  .hero-visual,
+  .hero-shell,
   .catalog-shell,
   .contact-shell {
     border-radius: 24px;
   }
-  .hero-copy,
+  .hero-shell,
   .catalog-shell,
   .contact-shell,
   .contact-card {
     padding: 22px;
   }
+  .hero-grid { gap: 20px; }
   .hero-title { letter-spacing: -2px; }
   .hero-desc { font-size: 15px; }
   .hero-highlights,
@@ -708,7 +735,7 @@ footer {
   .form-row {
     grid-template-columns: 1fr;
   }
-  .hero-visual { min-height: 380px; padding: 18px; }
+  .hero-visual { min-height: 280px; }
   .section,
   .contact-section {
     padding: 28px 0 36px;
@@ -739,7 +766,7 @@ footer {
 
 @media (max-width: 520px) {
   .container { width: min(calc(100% - 24px), var(--container)); }
-  .hero-copy,
+  .hero-shell,
   .catalog-shell,
   .contact-shell,
   .contact-card {
@@ -799,46 +826,52 @@ footer {
 
 <main>
   <section class="hero">
-    <div class="container hero-grid">
-      <div class="hero-copy">
-        <div class="hero-tag">Алматыдағы сенімді таңдау</div>
-        <h1 class="hero-title">Арман көлігіңізді <em>мобильдіде де</em>, кең экранда да ыңғайлы табыңыз</h1>
-        <p class="hero-desc">Жаңа және қолданылған автомобильдер каталоги, тест-драйвқа жылдам жазылу және клиентке түсінікті сервис. Барлық интерфейс телефон, планшет және компьютер үшін оңтайланған.</p>
-        <div class="hero-actions">
-          <button class="btn btn-primary" type="button" onclick="document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' })">Каталогты көру</button>
-          <button class="btn btn-secondary" type="button" onclick="scrollToContact()">Менеджермен сөйлесу</button>
-        </div>
-        <div class="hero-highlights">
-          <div class="hero-highlight">
-            <strong>500+</strong>
-            <span>Сатылымдағы автомобиль</span>
-          </div>
-          <div class="hero-highlight">
-            <strong>12 жыл</strong>
-            <span>Нарықтағы тәжірибе</span>
-          </div>
-          <div class="hero-highlight">
-            <strong>30 мин</strong>
-            <span>Өтінімге жауап уақыты</span>
-          </div>
-        </div>
-      </div>
-      <div class="hero-visual">
-        <div class="hero-glass">
-          <h2>Премиум таңдау, түсінікті сервис</h2>
-          <p>Каталогты сүзу, модельді қарау және тест-драйвқа жазылу барлық құрылғыда бірдей ыңғайлы жұмыс істейді.</p>
-          <div class="hero-stats">
-            <div class="hero-stat">
-              <strong>4.9/5</strong>
-              <span>Клиент бағасы</span>
+    <div class="container">
+      <div class="hero-shell">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="hero-copy-main">
+              <div class="hero-tag">Алматыдағы сенімді таңдау</div>
+              <h1 class="hero-title">Арман көлігіңізді <em>мобильдіде де</em>, кең экранда да ыңғайлы табыңыз</h1>
+              <p class="hero-desc">Жаңа және қолданылған автомобильдер каталоги, тест-драйвқа жылдам жазылу және клиентке түсінікті сервис. Барлық интерфейс телефон, планшет және компьютер үшін оңтайланған.</p>
+              <div class="hero-actions">
+                <button class="btn btn-primary" type="button" onclick="document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' })">Каталогты көру</button>
+                <button class="btn btn-secondary" type="button" onclick="scrollToContact()">Менеджермен сөйлесу</button>
+              </div>
             </div>
-            <div class="hero-stat">
-              <strong>24/7</strong>
-              <span>Онлайн өтінім</span>
+            <div class="hero-highlights">
+              <div class="hero-highlight">
+                <strong>500+</strong>
+                <span>Сатылымдағы автомобиль</span>
+              </div>
+              <div class="hero-highlight">
+                <strong>12 жыл</strong>
+                <span>Нарықтағы тәжірибе</span>
+              </div>
+              <div class="hero-highlight">
+                <strong>30 мин</strong>
+                <span>Өтінімге жауап уақыты</span>
+              </div>
             </div>
-            <div class="hero-stat">
-              <strong>1 орын</strong>
-              <span>Салон қызметі</span>
+          </div>
+          <div class="hero-visual">
+            <div class="hero-glass">
+              <h2>Премиум таңдау, түсінікті сервис</h2>
+              <p>Каталогты сүзу, модельді қарау және тест-драйвқа жазылу барлық құрылғыда бірдей ыңғайлы жұмыс істейді.</p>
+              <div class="hero-stats">
+                <div class="hero-stat">
+                  <strong>4.9/5</strong>
+                  <span>Клиент бағасы</span>
+                </div>
+                <div class="hero-stat">
+                  <strong>24/7</strong>
+                  <span>Онлайн өтінім</span>
+                </div>
+                <div class="hero-stat">
+                  <strong>1 орын</strong>
+                  <span>Салон қызметі</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
