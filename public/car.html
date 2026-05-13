@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoPrime — Автомобиль</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #0a0a0a; --white: #fafafa; --gray-100: #f0f0ee;
+  --gray-200: #e0e0dd; --gray-400: #9a9a96; --gray-600: #555552;
+  --accent: #1a6bff; --accent-light: #e8f0ff; --green: #1a8a4a;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--black); }
+a { text-decoration: none; color: inherit; }
+nav { display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; background: rgba(250,250,250,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 100; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -1px; }
+.logo span { color: var(--accent); }
+.back-btn { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--gray-600); cursor: pointer; transition: color .2s; padding: 8px 16px; border: 1px solid var(--gray-200); border-radius: 30px; }
+.back-btn:hover { color: var(--black); border-color: var(--black); }
+.loading-page { display: flex; align-items: center; justify-content: center; height: 60vh; font-size: 18px; color: var(--gray-400); }
+
+/* CAR DETAIL */
+.car-detail { max-width: 1200px; margin: 0 auto; padding: 48px 48px 80px; }
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-400); margin-bottom: 32px; }
+.breadcrumb a { color: var(--accent); }
+.breadcrumb span { color: var(--gray-400); }
+
+.detail-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: start; }
+
+.car-gallery { position: sticky; top: 80px; }
+.main-img {
+  background: var(--gray-100); border-radius: 20px; height: 360px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; border: 1.5px solid var(--gray-200);
+  position: relative; overflow: hidden;
+}
+.main-img img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+.main-img svg { opacity: 0.2; }
+.status-badge {
+  position: absolute; top: 16px; left: 16px;
+  font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; letter-spacing: 0.5px;
+}
+.badge-new { background: #dcfce7; color: var(--green); }
+.badge-used { background: #fef3c7; color: #92400e; }
+.thumb-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.thumb { height: 90px; background: var(--gray-100); border-radius: 12px; border: 1.5px solid var(--gray-200); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+.thumb svg { opacity: 0.15; }
+
+.car-info-panel {}
+.car-header { margin-bottom: 24px; }
+.car-brand { font-size: 13px; color: var(--accent); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.car-fullname { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px; }
+.car-price-big { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.car-price-note { font-size: 13px; color: var(--gray-400); }
+
+.divider { height: 1px; background: var(--gray-200); margin: 24px 0; }
+
+.specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.spec-item { background: var(--gray-100); border-radius: 12px; padding: 12px 14px; }
+.spec-label { font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.spec-value { font-size: 14px; font-weight: 500; color: var(--black); }
+
+.description { font-size: 15px; color: var(--gray-600); line-height: 1.75; margin-bottom: 24px; }
+
+.features-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+.features-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.feature-chip { display: flex; align-items: center; gap: 6px; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 20px; }
+.feature-chip::before { content: '•'; font-weight: 700; margin-right: 6px; }
+
+.action-btns { display: flex; flex-direction: column; gap: 12px; }
+.btn-main { padding: 16px 24px; background: var(--black); color: var(--white); border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s; }
+.btn-main:hover { background: var(--accent); }
+.btn-sec { padding: 16px 24px; background: transparent; color: var(--black); border: 1.5px solid var(--black); border-radius: 14px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s; }
+.btn-sec:hover { background: var(--black); color: var(--white); }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 24px; padding: 36px; width: 100%; max-width: 480px; }
+.modal-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+.modal-subtitle { font-size: 14px; color: var(--gray-400); margin-bottom: 28px; }
+.modal form { display: flex; flex-direction: column; gap: 14px; }
+.modal input, .modal select {
+  padding: 13px 16px; border: 1.5px solid var(--gray-200); border-radius: 12px;
+  font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--black); outline: none; transition: border .2s;
+}
+.modal input:focus, .modal select:focus { border-color: var(--accent); }
+.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-btn { padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s; }
+.modal-btn:hover { background: #0052e0; }
+.modal-close { position: absolute; top: 20px; right: 20px; background: var(--gray-100); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.modal-success { text-align: center; padding: 20px 0; }
+.modal-success h3 { font-family: 'Syne', sans-serif; font-size: 22px; margin-bottom: 8px; }
+.modal-success p { color: var(--gray-600); }
+.modal-success .checkmark { font-size: 52px; margin-bottom: 16px; }
+
+.image-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px;
+}
+.image-modal.open { display: flex; }
+.image-modal img { max-width: 100%; max-height: 100%; border-radius: 16px; }
+.image-modal-close {
+  position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer;
+}
+.image-modal-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; font-size: 24px; cursor: pointer;
+}
+.image-modal-prev { left: 24px; }
+.image-modal-next { right: 24px; }
+
+@media (max-width: 768px) {
+  nav { padding: 0 20px; }
+  .car-detail { padding: 24px 20px 60px; }
+  .detail-grid { grid-template-columns: 1fr; gap: 32px; }
+  .car-gallery { position: static; }
+  .car-fullname { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/"><div class="logo">Auto<span>Prime</span></div></a>
+  <button class="back-btn" onclick="history.back()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Каталогқа оралу
+  </button>
+</nav>
+
+<div id="page-content">
+  <div class="loading-page">Жүктелуде...</div>
+</div>
+
+<!-- TESTDRIVE MODAL -->
+<div class="modal-overlay" id="td-modal" onclick="closeModal(event)">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="document.getElementById('td-modal').classList.remove('open')">×</button>
+    <div id="modal-body">
+      <div class="modal-title">Тест-драйвқа жазылу</div>
+      <div class="modal-subtitle" id="modal-car-name">Автомобиль таңдалды</div>
+      <form onsubmit="submitTD(event)">
+        <div class="modal-row">
+          <input type="text" id="td-name" placeholder="Атыңыз *" required>
+          <input type="tel" id="td-phone" placeholder="Телефон *" required>
+        </div>
+        <input type="email" id="td-email" placeholder="Email">
+        <div class="modal-row">
+          <input type="date" id="td-date" required>
+          <input type="time" id="td-time" value="10:00" required>
+        </div>
+        <button type="submit" class="modal-btn">Жазылу →</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="image-modal" id="image-modal" onclick="closeImageModal(event)">
+  <button class="image-modal-close" id="image-modal-close">×</button>
+  <button class="image-modal-nav image-modal-prev" onclick="prevImage(); event.stopPropagation();">‹</button>
+  <button class="image-modal-nav image-modal-next" onclick="nextImage(); event.stopPropagation();">›</button>
+  <img id="image-modal-img" src="" alt="Full photo">
+</div>
+
+<script>
+const carId = window.location.pathname.split('/').pop();
+let currentCar = null;
+let modalImageIndex = 0;
+let modalImageList = [];
+
+async function loadCar() {
+  try {
+    const res = await fetch('/api/cars/' + carId);
+    if (!res.ok) throw new Error('Not found');
+    currentCar = await res.json();
+    renderCarPage(currentCar);
+  } catch(e) {
+    document.getElementById('page-content').innerHTML = '<div class="loading-page">Автомобиль табылмады. <a href="/" style="color:var(--accent)">Каталогқа оралу</a></div>';
+  }
+}
+
+function setMainImage(src) {
+  const mainImg = document.querySelector('.main-img img');
+  if (mainImg) {
+    mainImg.src = src;
+    modalImageIndex = modalImageList.indexOf(src);
+    if (modalImageIndex === -1) modalImageIndex = 0;
+  }
+}
+
+function openImageModal(src) {
+  const modal = document.getElementById('image-modal');
+  const img = document.getElementById('image-modal-img');
+  if (!modal || !img) return;
+  modalImageIndex = modalImageList.indexOf(src);
+  if (modalImageIndex === -1) modalImageIndex = 0;
+  img.src = modalImageList[modalImageIndex] || src;
+  modal.classList.add('open');
+}
+
+function prevImage() {
+  if (!modalImageList.length) return;
+  modalImageIndex = (modalImageIndex - 1 + modalImageList.length) % modalImageList.length;
+  showModalImage(modalImageIndex);
+}
+
+function nextImage() {
+  if (!modalImageList.length) return;
+  modalImageIndex = (modalImageIndex + 1) % modalImageList.length;
+  showModalImage(modalImageIndex);
+}
+
+function showModalImage(index) {
+  const img = document.getElementById('image-modal-img');
+  if (!img) return;
+  img.src = modalImageList[index];
+}
+
+function closeImageModal(e) {
+  if (e.target.id === 'image-modal' || e.target.id === 'image-modal-close') {
+    document.getElementById('image-modal').classList.remove('open');
+  }
+}
+
+document.addEventListener('keydown', (event) => {
+  const modal = document.getElementById('image-modal');
+  if (!modal || !modal.classList.contains('open')) return;
+  if (event.key === 'ArrowLeft') prevImage();
+  if (event.key === 'ArrowRight') nextImage();
+  if (event.key === 'Escape') modal.classList.remove('open');
+});
+
+function renderCarPage(car) {
+  document.title = `${car.brand} ${car.model} — AutoPrime`;
+  modalImageList = car.images && car.images.length ? car.images : [];
+  const html = `
+  <div class="car-detail">
+    <div class="breadcrumb">
+      <a href="/">Каталог</a>
+      <span>›</span>
+      <span>${car.brand}</span>
+      <span>›</span>
+      <span>${car.brand} ${car.model}</span>
+    </div>
+    <div class="detail-grid">
+      <div class="car-gallery">
+        <div class="main-img">
+          ${car.images && car.images.length ? `<img src="${car.images[0]}" alt="${car.brand} ${car.model}" onclick="openImageModal('${car.images[0]}')">` : `<svg width="180" height="90" viewBox="0 0 200 100" fill="none"><rect x="20" y="40" width="160" height="45" rx="12" fill="#0a0a0a"/><rect x="50" y="20" width="100" height="35" rx="8" fill="#0a0a0a"/><circle cx="55" cy="88" r="14" fill="#555"/><circle cx="145" cy="88" r="14" fill="#555"/><circle cx="55" cy="88" r="7" fill="#aaa"/><circle cx="145" cy="88" r="7" fill="#aaa"/></svg>`}
+          <span class="status-badge ${car.status === 'Жаңа' ? 'badge-new' : 'badge-used'}">${car.status}</span>
+        </div>
+        <div class="thumb-row">
+          ${car.images && car.images.length ? car.images.map((img, idx) => `
+            <div class="thumb" onclick="setMainImage('${img}')">
+              <img src="${img}" alt="thumb-${idx+1}">
+            </div>
+          `).join('') : [1,2,3].map(() => `<div class="thumb"><svg width="60" height="40" viewBox="0 0 200 100" fill="none"><rect x="20" y="40" width="160" height="45" rx="12" fill="#0a0a0a"/><rect x="50" y="20" width="100" height="35" rx="8" fill="#0a0a0a"/><circle cx="55" cy="88" r="12" fill="#555"/><circle cx="145" cy="88" r="12" fill="#555"/></svg></div>`).join('')}
+        </div>
+      </div>
+
+      <div class="car-info-panel">
+        <div class="car-header">
+          <div class="car-brand">${car.brand} • ${car.year}</div>
+          <div class="car-fullname">${car.model}</div>
+          <div class="car-price-big">${car.price.toLocaleString()} ₸</div>
+          <div class="car-price-note">Бастапқы бағасы · Несие мүмкіндігі бар</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="specs-grid">
+          <div class="spec-item"><div class="spec-label">Двигатель</div><div class="spec-value">${car.engine}</div></div>
+          <div class="spec-item"><div class="spec-label">Қуат</div><div class="spec-value">${car.power}</div></div>
+          <div class="spec-item"><div class="spec-label">Жетек</div><div class="spec-value">${car.transmission}</div></div>
+          <div class="spec-item"><div class="spec-label">Приводы</div><div class="spec-value">${car.drive}</div></div>
+          <div class="spec-item"><div class="spec-label">Отын</div><div class="spec-value">${car.fuel}</div></div>
+          <div class="spec-item"><div class="spec-label">Кузов</div><div class="spec-value">${car.body}</div></div>
+          <div class="spec-item"><div class="spec-label">Түс</div><div class="spec-value">${car.color}</div></div>
+          <div class="spec-item"><div class="spec-label">Жүгіру</div><div class="spec-value">${car.mileage === 0 ? '0 км (жаңа)' : car.mileage.toLocaleString() + ' км'}</div></div>
+        </div>
+
+        <p class="description">${car.description}</p>
+
+        <div class="divider"></div>
+
+        ${car.features && car.features.length ? `
+          <div class="features-title">Жабдықтау</div>
+          <div class="features-list">${car.features.map(f => `<div class="feature-chip">${f}</div>`).join('')}</div>
+        ` : ''}
+
+        <div class="action-btns">
+          <button class="btn-main" onclick="openTDModal()">Тест-драйвқа жазылу</button>
+          <button class="btn-sec" onclick="window.location='tel:+77273000000'">Қоңырау шалу</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('page-content').innerHTML = html;
+}
+
+function openTDModal() {
+  if (!currentCar) return;
+  document.getElementById('modal-car-name').textContent = currentCar.brand + ' ' + currentCar.model + ' (' + currentCar.year + ')';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('td-date').min = today;
+  document.getElementById('td-date').value = today;
+  document.getElementById('td-modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target.id === 'td-modal') document.getElementById('td-modal').classList.remove('open');
+}
+
+async function submitTD(e) {
+  e.preventDefault();
+  const data = {
+    name: document.getElementById('td-name').value,
+    phone: document.getElementById('td-phone').value,
+    email: document.getElementById('td-email').value,
+    carId: currentCar.id,
+    date: document.getElementById('td-date').value,
+    time: document.getElementById('td-time').value,
+  };
+  try {
+    await fetch('/api/testdrives', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    document.getElementById('modal-body').innerHTML = `
+      <div class="modal-success">
+        <div class="checkmark">OK</div>
+        <h3>Жазылдыңыз!</h3>
+        <p>${data.date} сағат ${data.time}‑де тест-драйв күтіп тұр.<br>Жақын арада хабарласамыз.</p>
+      </div>`;
+  } catch(err) {
+    alert('Қате шықты, қайтадан байқаңыз');
+  }
+}
+
+loadCar();
+</script>
+</body>
+</html>
