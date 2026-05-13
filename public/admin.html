@@ -5,142 +5,706 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AutoPrime — Админ панель</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --black: #0a0a0a; --white: #fafafa; --bg: #f4f4f1;
-  --gray-100: #ebebе8; --gray-200: #ddddd9; --gray-400: #9a9a96;
-  --gray-600: #555552; --accent: #1a6bff; --accent-light: #e8f0ff;
-  --red: #e03030; --red-light: #fce8e8; --green: #1a8a4a; --green-light: #dcfce7;
-  --yellow: #c47a00; --yellow-light: #fef3c7;
-  --sidebar: 240px;
+  --black: #0d1117;
+  --white: #fbfbf8;
+  --bg: #f4f1e8;
+  --sand: #efe9dc;
+  --stone: #d8d0c1;
+  --stone-dark: #70695d;
+  --accent: #1565ff;
+  --accent-dark: #0c47ba;
+  --accent-soft: #e8f1ff;
+  --red: #db3b31;
+  --red-soft: #feeae7;
+  --green: #167c48;
+  --green-soft: #e2f5ea;
+  --yellow: #a66c09;
+  --yellow-soft: #fff1d2;
+  --shadow: 0 28px 70px rgba(13, 17, 23, 0.12);
+  --sidebar: 280px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--black); display: flex; min-height: 100vh; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background:
+    radial-gradient(circle at top right, rgba(21, 101, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, #faf8f2 0%, #f3eee4 100%);
+  color: var(--black);
+  min-height: 100vh;
+}
+body.sidebar-open { overflow: hidden; }
+button, input, select, textarea { font: inherit; }
 
-/* SIDEBAR */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+}
+.login-box {
+  width: min(100%, 480px);
+  padding: 34px;
+  border-radius: 30px;
+  background: rgba(255,255,255,0.98);
+  box-shadow: var(--shadow);
+}
+.login-box h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 5vw, 34px);
+  line-height: 1;
+  letter-spacing: -1px;
+  margin-bottom: 10px;
+}
+.login-box p {
+  color: var(--stone-dark);
+  line-height: 1.7;
+  margin-bottom: 22px;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 17, 23, 0.48);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+  z-index: 180;
+}
+body.sidebar-open .sidebar-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .sidebar {
-  width: var(--sidebar); flex-shrink: 0;
-  background: var(--black); color: var(--white);
-  display: flex; flex-direction: column;
-  position: fixed; top: 0; left: 0; bottom: 0;
-  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #0d1117 0%, #111c33 100%);
+  color: white;
+  padding: 18px 14px;
+  z-index: 200;
+  box-shadow: 18px 0 45px rgba(13, 17, 23, 0.14);
 }
-.sidebar-logo { padding: 24px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-.sidebar-logo h1 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.sidebar-logo {
+  padding: 14px 12px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  letter-spacing: -0.7px;
+}
 .sidebar-logo h1 span { color: var(--accent); }
-.sidebar-logo p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
-.sidebar-nav { padding: 16px 12px; flex: 1; }
-.nav-section { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 8px 12px 6px; }
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; border-radius: 10px; cursor: pointer;
-  font-size: 14px; color: rgba(255,255,255,0.6); transition: all .2s; margin-bottom: 2px;
+.sidebar-logo p {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.48);
 }
-.nav-item:hover { background: rgba(255,255,255,0.06); color: var(--white); }
-.nav-item.active { background: var(--accent); color: var(--white); }
-.nav-item svg { flex-shrink: 0; }
-.nav-badge { margin-left: auto; background: var(--red); color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
-.sidebar-bottom { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
-.sidebar-bottom a { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(255,255,255,0.5); padding: 8px 12px; border-radius: 8px; text-decoration: none; transition: color .2s; }
-.sidebar-bottom a:hover { color: white; }
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 6px;
+  overflow-y: auto;
+}
+.nav-section {
+  padding: 10px 12px 6px;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.34);
+}
+.nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.72);
+  cursor: pointer;
+  text-align: left;
+  transition: background .2s ease, color .2s ease;
+}
+.nav-item:hover {
+  background: rgba(255,255,255,0.07);
+  color: white;
+}
+.nav-item.active {
+  background: var(--accent);
+  color: white;
+}
+.nav-badge {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--red);
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+.sidebar-bottom {
+  padding: 12px 6px 4px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-bottom a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  transition: background .2s ease, color .2s ease;
+}
+.sidebar-bottom a:hover {
+  background: rgba(255,255,255,0.07);
+  color: white;
+}
 
-/* MAIN */
-.main { margin-left: var(--sidebar); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-.topbar { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
-.topbar-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
-.topbar-right { display: flex; gap: 12px; }
-.btn { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s; border: none; }
-.btn-primary { background: var(--accent); color: white; }
-.btn-primary:hover { background: #0052e0; }
-.btn-ghost { background: transparent; color: var(--black); border: 1px solid var(--gray-200); }
-.btn-ghost:hover { background: var(--gray-100); }
-.btn-danger { background: var(--red-light); color: var(--red); border: 1px solid #fca5a5; }
-.btn-danger:hover { background: #f87171; color: white; border-color: #f87171; }
-.btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+.main {
+  margin-left: var(--sidebar);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 78px;
+  padding: 18px 28px;
+  background: rgba(251, 251, 248, 0.86);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(112, 105, 93, 0.14);
+}
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.menu-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 1px solid rgba(13, 17, 23, 0.12);
+  background: white;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.topbar-title-group {
+  min-width: 0;
+}
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.topbar-subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--stone-dark);
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 
-.content { padding: 28px 32px; flex: 1; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  transition: transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover { background: var(--accent-dark); }
+.btn-ghost {
+  background: rgba(255,255,255,0.78);
+  color: var(--black);
+  border: 1px solid rgba(13, 17, 23, 0.12);
+}
+.btn-ghost:hover { background: var(--sand); }
+.btn-danger {
+  background: var(--red-soft);
+  color: var(--red);
+  border: 1px solid rgba(219, 59, 49, 0.18);
+}
+.btn-danger:hover {
+  background: var(--red);
+  color: white;
+}
+.btn-sm {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+}
 
-/* STATS */
-.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-.stat-card { background: var(--white); border-radius: 14px; padding: 20px 22px; border: 1px solid var(--gray-200); }
-.stat-label { font-size: 12px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-.stat-num { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 700; }
+.content {
+  padding: 28px;
+  display: grid;
+  gap: 24px;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.stat-card {
+  padding: 22px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(112, 105, 93, 0.12);
+  box-shadow: var(--shadow);
+}
+.stat-label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--stone-dark);
+  margin-bottom: 10px;
+}
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 5vw, 38px);
+  letter-spacing: -1px;
+}
 .stat-num.blue { color: var(--accent); }
 .stat-num.green { color: var(--green); }
 .stat-num.yellow { color: var(--yellow); }
 .stat-num.red { color: var(--red); }
 
-/* TABLE */
-.table-card { background: var(--white); border-radius: 16px; border: 1px solid var(--gray-200); overflow: hidden; }
-.table-header { padding: 18px 22px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; }
-.table-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
-.table-search { padding: 8px 14px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; width: 220px; transition: border .2s; }
-.table-search:focus { border-color: var(--accent); }
-table { width: 100%; border-collapse: collapse; }
-th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; background: var(--bg); border-bottom: 1px solid var(--gray-200); }
-td { padding: 13px 16px; font-size: 13px; border-bottom: 1px solid var(--gray-200); vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: #fafaf8; }
-.car-name-cell { display: flex; align-items: center; gap: 10px; }
-.car-icon-sm { width: 40px; height: 32px; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.car-icon-sm svg { opacity: 0.25; }
-.badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.3px; }
-.badge-green { background: var(--green-light); color: var(--green); }
-.badge-yellow { background: var(--yellow-light); color: var(--yellow); }
-.badge-red { background: var(--red-light); color: var(--red); }
-.badge-blue { background: var(--accent-light); color: var(--accent); }
-.badge-gray { background: var(--gray-100); color: var(--gray-600); }
-.actions { display: flex; gap: 6px; }
-.empty-row td { text-align: center; padding: 48px; color: var(--gray-400); }
+.table-card {
+  border-radius: 26px;
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(112, 105, 93, 0.12);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px 24px;
+  border-bottom: 1px solid rgba(112, 105, 93, 0.12);
+}
+.table-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  letter-spacing: -0.8px;
+}
+.table-search {
+  width: min(100%, 260px);
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(112, 105, 93, 0.16);
+  outline: none;
+  background: white;
+}
+.table-search:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(21, 101, 255, 0.08);
+}
+.table-scroll {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+th {
+  padding: 13px 18px;
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--stone-dark);
+  background: rgba(239, 233, 220, 0.55);
+}
+td {
+  padding: 16px 18px;
+  border-top: 1px solid rgba(112, 105, 93, 0.1);
+  vertical-align: middle;
+  font-size: 14px;
+}
+tr:hover td { background: rgba(248, 245, 238, 0.7); }
+.car-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.car-icon-sm {
+  width: 46px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--sand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.car-icon-sm svg { opacity: 0.28; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.badge-green { background: var(--green-soft); color: var(--green); }
+.badge-yellow { background: var(--yellow-soft); color: var(--yellow); }
+.badge-red { background: var(--red-soft); color: var(--red); }
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.empty-row td {
+  padding: 42px 18px;
+  text-align: center;
+  color: var(--stone-dark);
+}
 
-/* TAB PAGES */
 .tab-page { display: none; }
 .tab-page.active { display: block; }
 
-/* MODAL */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
-.modal-overlay.open { display: flex; }
-.modal { background: var(--white); border-radius: 20px; padding: 32px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
-.modal h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-.modal-sub { font-size: 14px; color: var(--gray-400); margin-bottom: 24px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.form-full { grid-column: 1 / -1; }
-.form-label { font-size: 12px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-.form-input {
-  width: 100%; padding: 11px 14px; border: 1.5px solid var(--gray-200);
-  border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif;
-  color: var(--black); outline: none; transition: border .2s; background: var(--white);
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  padding: 24px;
+  z-index: 300;
+  background: rgba(13, 17, 23, 0.5);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
 }
-.form-input:focus { border-color: var(--accent); }
-textarea.form-input { height: 90px; resize: none; }
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+.modal-overlay.open { display: flex; }
+.modal {
+  width: min(100%, 760px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border-radius: 28px;
+  background: white;
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+.modal h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+.modal-sub {
+  color: var(--stone-dark);
+  margin-bottom: 22px;
+  line-height: 1.7;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.form-full { grid-column: 1 / -1; }
+.form-label {
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--stone-dark);
+}
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(112, 105, 93, 0.16);
+  background: white;
+  outline: none;
+}
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(21, 101, 255, 0.08);
+}
+textarea.form-input {
+  min-height: 110px;
+  resize: vertical;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
 
-/* TOAST */
-.toast { position: fixed; bottom: 24px; right: 24px; background: var(--black); color: var(--white); padding: 12px 18px; border-radius: 10px; font-size: 14px; transform: translateY(60px); opacity: 0; transition: all .3s; z-index: 999; }
-.toast.show { transform: translateY(0); opacity: 1; }
+.image-upload-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+.image-upload-row input[type="file"] {
+  padding: 11px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(112, 105, 93, 0.16);
+  background: white;
+}
+.image-preview-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+.image-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(112, 105, 93, 0.12);
+  background: rgba(239, 233, 220, 0.42);
+  overflow: hidden;
+}
+.image-preview-item img {
+  width: 78px;
+  height: 62px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.image-preview-item span {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 12px;
+  color: var(--stone-dark);
+  word-break: break-all;
+}
+.image-preview-item button {
+  border: none;
+  background: transparent;
+  color: var(--red);
+  padding: 0 14px;
+  font-size: 18px;
+  cursor: pointer;
+}
+.image-preview-item.empty-state {
+  justify-content: center;
+  padding: 16px;
+}
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: var(--black);
+  color: white;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .24s ease, transform .24s ease;
+  pointer-events: none;
+  z-index: 360;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
 .toast.success { background: var(--green); }
 .toast.error { background: var(--red); }
 
-.login-screen {
-  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.65); z-index: 250;
+@media (max-width: 1180px) {
+  .stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
-.login-box {
-  width: min(480px, 90vw); background: white; border-radius: 24px; padding: 36px; box-shadow: 0 30px 80px rgba(10, 10, 10, 0.18);
-}
-.login-box h2 { font-family: 'Syne', sans-serif; font-size: 26px; margin-bottom: 12px; }
-.login-box p { color: var(--gray-600); margin-bottom: 24px; }
-.login-box .form-input { width: 100%; margin-bottom: 16px; }
-.login-box .login-actions { display: flex; justify-content: flex-end; gap: 10px; }
-.login-box .login-actions .btn { min-width: 120px; }
 
-.image-upload-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
-.image-upload-row input[type="file"] { padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--gray-200); background: var(--white); }
-.image-preview-list { display: grid; gap: 10px; margin-top: 12px; }
-.image-preview-item { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--gray-200); border-radius: 12px; overflow: hidden; background: var(--bg); }
-.image-preview-item img { width: 72px; height: 56px; object-fit: cover; }
-.image-preview-item span { padding: 8px 10px; font-size: 12px; color: var(--gray-600); flex: 1; }
-.image-preview-item button { border: none; background: transparent; color: var(--red); cursor: pointer; padding: 0 12px; font-size: 16px; }
+@media (max-width: 980px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .26s ease;
+  }
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+  .main {
+    margin-left: 0;
+  }
+  .menu-toggle {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-box {
+    padding: 24px;
+    border-radius: 24px;
+  }
+  .login-box .login-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .topbar {
+    padding: 16px 18px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .topbar-left,
+  .topbar-right {
+    width: 100%;
+  }
+  .topbar-right {
+    justify-content: stretch;
+  }
+  .topbar-right .btn {
+    flex: 1;
+  }
+  .content {
+    padding: 18px;
+  }
+  .stats-row,
+  .form-grid,
+  .image-upload-row {
+    grid-template-columns: 1fr;
+  }
+  .table-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .table-search {
+    width: 100%;
+  }
+  .table-scroll {
+    overflow: visible;
+  }
+  table.stack-on-mobile,
+  table.stack-on-mobile tbody,
+  table.stack-on-mobile tr,
+  table.stack-on-mobile td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  table.stack-on-mobile thead {
+    display: none;
+  }
+  table.stack-on-mobile tr {
+    display: grid;
+    gap: 10px;
+    padding: 16px 18px;
+    border-top: 1px solid rgba(112, 105, 93, 0.1);
+  }
+  table.stack-on-mobile tr:first-child {
+    border-top: none;
+  }
+  table.stack-on-mobile td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+  table.stack-on-mobile td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--stone-dark);
+  }
+  .empty-row td {
+    display: block;
+    padding: 0;
+    text-align: center;
+  }
+  .empty-row td::before {
+    content: none;
+  }
+  .car-name-cell {
+    justify-content: flex-end;
+    text-align: right;
+  }
+  .actions {
+    justify-content: flex-end;
+  }
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 26px 26px 0 0;
+    padding: 22px;
+  }
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+  .modal-actions .btn {
+    width: 100%;
+  }
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .content,
+  .topbar,
+  .modal,
+  .login-box {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .topbar-title {
+    font-size: 22px;
+  }
+}
 </style>
 </head>
 <body>
@@ -148,63 +712,69 @@ textarea.form-input { height: 90px; resize: none; }
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <h2>Админ панельге кіру</h2>
-    <p>Қауіпсіз кіру үшін логин мен пароль енгізіңіз. Деректер .env файлында сақталады.</p>
+    <p>Қауіпсіз кіру үшін логин мен пароль енгізіңіз. Бұл панель де мобильді және компьютер экрандарына бейімделген.</p>
     <input class="form-input" id="login-username" type="text" placeholder="Логин" autocomplete="username">
-    <input class="form-input" id="login-password" type="password" placeholder="Пароль" autocomplete="current-password">
-    <div class="login-actions">
-      <button class="btn btn-ghost" onclick="window.location.href='/'">Басқа сайт</button>
-      <button class="btn btn-primary" onclick="login()">Кіру</button>
+    <input class="form-input" id="login-password" type="password" placeholder="Пароль" autocomplete="current-password" style="margin-top: 12px;">
+    <div class="login-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
+      <button class="btn btn-ghost" type="button" onclick="window.location.href='/'">Сайтқа оралу</button>
+      <button class="btn btn-primary" type="button" onclick="login()">Кіру</button>
     </div>
   </div>
 </div>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <h1>Auto<span>Prime</span></h1>
     <p>Администратор панелі</p>
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section">Жалпы</div>
-    <div class="nav-item active" onclick="showTab('dashboard',this)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    <button class="nav-item active" type="button" data-title="Басқару тақтасы" onclick="showTab('dashboard', this)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
       Басқару тақтасы
-    </div>
+    </button>
     <div class="nav-section">Каталог</div>
-    <div class="nav-item" onclick="showTab('cars',this)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+    <button class="nav-item" type="button" data-title="Автомобильдер" onclick="showTab('cars', this)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"></rect><path d="M16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
       Автомобильдер
-    </div>
+    </button>
     <div class="nav-section">Клиенттер</div>
-    <div class="nav-item" onclick="showTab('testdrives',this)" id="td-nav">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <button class="nav-item" type="button" data-title="Тест-драйв өтінімдер" onclick="showTab('testdrives', this)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
       Тест-драйвтар
       <span class="nav-badge" id="td-badge">0</span>
-    </div>
+    </button>
   </nav>
   <div class="sidebar-bottom">
     <a href="/" target="_blank">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"></path><polyline points="15,3 21,3 21,9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
       Сайтты көру
     </a>
   </div>
 </aside>
 
-<!-- MAIN -->
-<div class="main">
+<div class="main" id="main">
   <div class="topbar">
-    <div class="topbar-title" id="topbar-title">Басқару тақтасы</div>
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menu-toggle" type="button" onclick="toggleSidebar()" aria-label="Меню">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+      </button>
+      <div class="topbar-title-group">
+        <div class="topbar-title" id="topbar-title">Басқару тақтасы</div>
+        <div class="topbar-subtitle">Каталогты басқару, тест-драйвтарды қарау және автомобильдерді өзгерту</div>
+      </div>
+    </div>
     <div class="topbar-right">
-      <button class="btn btn-primary" id="add-car-btn" style="display:none" onclick="openCarModal()">+ Автомобиль қосу</button>
-      <button class="btn btn-ghost" id="logout-btn" style="display:none" onclick="logout()">Шығу</button>
+      <button class="btn btn-primary" id="add-car-btn" style="display:none" type="button" onclick="openCarModal()">+ Автомобиль қосу</button>
+      <button class="btn btn-ghost" id="logout-btn" style="display:none" type="button" onclick="logout()">Шығу</button>
     </div>
   </div>
 
   <div class="content">
-
-    <!-- DASHBOARD -->
     <div class="tab-page active" id="tab-dashboard">
-      <div class="stats-row" id="stats-row">
+      <div class="stats-row">
         <div class="stat-card"><div class="stat-label">Барлық авто</div><div class="stat-num blue" id="s-total">—</div></div>
         <div class="stat-card"><div class="stat-label">Жаңа</div><div class="stat-num green" id="s-new">—</div></div>
         <div class="stat-card"><div class="stat-label">Тест-драйвтар</div><div class="stat-num yellow" id="s-td">—</div></div>
@@ -214,82 +784,74 @@ textarea.form-input { height: 90px; resize: none; }
         <div class="table-header">
           <div class="table-title">Соңғы тест-драйвтар</div>
         </div>
-        <table>
-          <thead><tr><th>Клиент</th><th>Телефон</th><th>Автомобиль</th><th>Күні</th><th>Статус</th></tr></thead>
-          <tbody id="dash-td-body"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="stack-on-mobile">
+            <thead><tr><th>Клиент</th><th>Телефон</th><th>Автомобиль</th><th>Күні</th><th>Статус</th></tr></thead>
+            <tbody id="dash-td-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- CARS -->
     <div class="tab-page" id="tab-cars">
       <div class="table-card">
         <div class="table-header">
           <div class="table-title">Автомобильдер</div>
-          <input class="table-search" type="text" placeholder="Іздеу..." oninput="filterAdminCars(this.value)">
+          <input class="table-search" type="text" placeholder="Марка немесе модель..." oninput="filterAdminCars(this.value)">
         </div>
-        <table>
-          <thead><tr><th>Автомобиль</th><th>Жылы</th><th>Баға</th><th>Статус</th><th>Кузов</th><th>Іс-әрекет</th></tr></thead>
-          <tbody id="cars-body"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="stack-on-mobile">
+            <thead><tr><th>Автомобиль</th><th>Жылы</th><th>Баға</th><th>Статус</th><th>Кузов</th><th>Іс-әрекет</th></tr></thead>
+            <tbody id="cars-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- TESTDRIVES -->
     <div class="tab-page" id="tab-testdrives">
       <div class="table-card">
         <div class="table-header">
           <div class="table-title">Тест-драйв өтінімдер</div>
-          <input class="table-search" type="text" placeholder="Іздеу..." oninput="filterTD(this.value)">
+          <input class="table-search" type="text" placeholder="Клиент, телефон, автомобиль..." oninput="filterTD(this.value)">
         </div>
-        <table>
-          <thead><tr><th>Клиент</th><th>Телефон</th><th>Автомобиль</th><th>Күні / Уақыт</th><th>Статус</th><th>Іс-әрекет</th></tr></thead>
-          <tbody id="td-body"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="stack-on-mobile">
+            <thead><tr><th>Клиент</th><th>Телефон</th><th>Автомобиль</th><th>Күні / Уақыт</th><th>Статус</th><th>Іс-әрекет</th></tr></thead>
+            <tbody id="td-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
-
   </div>
 </div>
 
-<!-- CAR MODAL -->
 <div class="modal-overlay" id="car-modal" onclick="closeCarModal(event)">
   <div class="modal">
     <h2 id="car-modal-title">Автомобиль қосу</h2>
-    <div class="modal-sub">Барлық міндетті өрістерді толтырыңыз</div>
+    <div class="modal-sub">Барлық маңызды өрістерді толтырыңыз. Форма мобильдіде де, кең экранда да ыңғайлы.</div>
     <div class="form-grid">
       <div><div class="form-label">Маркасы *</div><input class="form-input" id="cm-brand" placeholder="Toyota"></div>
       <div><div class="form-label">Моделі *</div><input class="form-input" id="cm-model" placeholder="Camry 3.5"></div>
-      <div><div class="form-label">Жылы *</div><input class="form-input" id="cm-year" type="number" value="2024" min="1990" max="2025"></div>
+      <div><div class="form-label">Жылы *</div><input class="form-input" id="cm-year" type="number" value="2024" min="1990" max="2030"></div>
       <div><div class="form-label">Баға (₸) *</div><input class="form-input" id="cm-price" type="number" placeholder="18500000"></div>
-      <div><div class="form-label">Статус</div>
-        <select class="form-input" id="cm-status"><option>Жаңа</option><option>Қолданылған</option></select>
-      </div>
-      <div><div class="form-label">Кузов</div>
-        <select class="form-input" id="cm-body"><option>Седан</option><option>Кроссовер</option><option>Хэтчбэк</option><option>Пикап</option><option>Минивэн</option></select>
-      </div>
-      <div><div class="form-label">Отын</div>
-        <select class="form-input" id="cm-fuel"><option>Бензин</option><option>Дизель</option><option>Гибрид</option><option>Электро</option></select>
-      </div>
-      <div><div class="form-label">Жетек</div>
-        <select class="form-input" id="cm-transmission"><option>Автомат</option><option>Механика</option><option>Вариатор</option></select>
-      </div>
-      <div><div class="form-label">Приводы</div>
-        <select class="form-input" id="cm-drive"><option>Алдыңғы</option><option>Артқы</option><option>4x4</option></select>
-      </div>
+      <div><div class="form-label">Статус</div><select class="form-input" id="cm-status"><option>Жаңа</option><option>Қолданылған</option></select></div>
+      <div><div class="form-label">Кузов</div><select class="form-input" id="cm-body"><option>Седан</option><option>Кроссовер</option><option>Хэтчбэк</option><option>Пикап</option><option>Минивэн</option></select></div>
+      <div><div class="form-label">Отын</div><select class="form-input" id="cm-fuel"><option>Бензин</option><option>Дизель</option><option>Гибрид</option><option>Электро</option></select></div>
+      <div><div class="form-label">Қорап</div><select class="form-input" id="cm-transmission"><option>Автомат</option><option>Механика</option><option>Вариатор</option></select></div>
+      <div><div class="form-label">Жетек</div><select class="form-input" id="cm-drive"><option>Алдыңғы</option><option>Артқы</option><option>4x4</option></select></div>
       <div><div class="form-label">Түс</div><input class="form-input" id="cm-color" placeholder="Ақ"></div>
       <div><div class="form-label">Двигатель</div><input class="form-input" id="cm-engine" placeholder="2.0L"></div>
       <div><div class="form-label">Қуат</div><input class="form-input" id="cm-power" placeholder="150 а.к."></div>
       <div><div class="form-label">Жүгіру (км)</div><input class="form-input" id="cm-mileage" type="number" value="0"></div>
       <div class="form-full"><div class="form-label">Сипаттама</div><textarea class="form-input" id="cm-desc" placeholder="Автомобиль туралы қысқаша сипаттама..."></textarea></div>
-      <div class="form-full"><div class="form-label">Жабдықтау (үтірмен бөліп жазыңыз)</div><input class="form-input" id="cm-features" placeholder="Cruise Control, Камера, Apple CarPlay"></div>
+      <div class="form-full"><div class="form-label">Жабдықтау (үтірмен бөліңіз)</div><input class="form-input" id="cm-features" placeholder="Cruise Control, Камера, Apple CarPlay"></div>
       <div class="form-full">
         <div class="form-label">Фотосуреттер</div>
         <div class="image-upload-row">
-          <input class="form-input" id="cm-image-url" placeholder="Сілтемені енгізіңіз">
+          <input class="form-input" id="cm-image-url" placeholder="Сурет сілтемесін енгізіңіз">
           <button class="btn btn-ghost btn-sm" type="button" onclick="addImageByUrl()">Сілтеме қосу</button>
         </div>
-        <div class="image-upload-row">
+        <div class="image-upload-row" style="margin-top:10px;">
           <input id="cm-image-file" type="file" accept="image/*">
           <button class="btn btn-ghost btn-sm" type="button" onclick="uploadImageFile()">Файлдан қосу</button>
         </div>
@@ -297,8 +859,8 @@ textarea.form-input { height: 90px; resize: none; }
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="document.getElementById('car-modal').classList.remove('open')">Болдырмау</button>
-      <button class="btn btn-primary" onclick="saveCar()">Сақтау</button>
+      <button class="btn btn-ghost" type="button" onclick="document.getElementById('car-modal').classList.remove('open')">Болдырмау</button>
+      <button class="btn btn-primary" type="button" onclick="saveCar()">Сақтау</button>
     </div>
   </div>
 </div>
@@ -306,7 +868,9 @@ textarea.form-input { height: 90px; resize: none; }
 <div class="toast" id="toast"></div>
 
 <script>
-let allCars = [], allTD = [], editCarId = null;
+let allCars = [];
+let allTD = [];
+let editCarId = null;
 let modalImages = [];
 const ADMIN_TOKEN_KEY = 'admin_token';
 let adminToken = localStorage.getItem(ADMIN_TOKEN_KEY);
@@ -325,14 +889,24 @@ async function apiFetch(url, options = {}) {
   return res;
 }
 
+function toggleSidebar(force) {
+  const shouldOpen = typeof force === 'boolean' ? force : !document.body.classList.contains('sidebar-open');
+  document.body.classList.toggle('sidebar-open', shouldOpen);
+}
+
+function closeSidebar() {
+  toggleSidebar(false);
+}
+
 function showLoginScreen(show) {
   document.getElementById('login-screen').style.display = show ? 'flex' : 'none';
-  document.querySelector('.sidebar').style.display = show ? 'none' : 'flex';
-  document.querySelector('.main').style.display = show ? 'none' : 'flex';
+  document.getElementById('sidebar').style.display = show ? 'none' : 'flex';
+  document.getElementById('main').style.display = show ? 'none' : 'flex';
   document.getElementById('logout-btn').style.display = show ? 'none' : 'inline-flex';
   if (show) {
     document.getElementById('topbar-title').textContent = 'Кіру';
   }
+  closeSidebar();
 }
 
 async function initializeAdmin() {
@@ -355,6 +929,7 @@ async function login() {
     showToast('Пароль енгізіңіз', 'error');
     return;
   }
+
   try {
     const username = document.getElementById('login-username').value.trim();
     const res = await fetch('/api/login', {
@@ -369,7 +944,7 @@ async function login() {
     showLoginScreen(false);
     await loadAll();
   } catch (e) {
-    showToast('Пароль қате', 'error');
+    showToast('Логин немесе пароль қате', 'error');
   }
 }
 
@@ -386,7 +961,7 @@ function logout() {
 function renderImageList() {
   const list = document.getElementById('cm-images-list');
   if (!modalImages.length) {
-    list.innerHTML = '<div class="image-preview-item"><span>Фотосуреттер жоқ</span></div>';
+    list.innerHTML = '<div class="image-preview-item empty-state"><span>Фотосуреттер әлі қосылмады</span></div>';
     return;
   }
   list.innerHTML = modalImages.map((url, index) => `
@@ -396,13 +971,6 @@ function renderImageList() {
       <button type="button" onclick="removeImage(${index})">×</button>
     </div>
   `).join('');
-}
-
-function resetCarModal() {
-  modalImages = [];
-  renderImageList();
-  document.getElementById('cm-image-url').value = '';
-  document.getElementById('cm-image-file').value = '';
 }
 
 function addImageByUrl() {
@@ -422,19 +990,19 @@ async function uploadImageFile() {
     showToast('Файл таңдаңыз', 'error');
     return;
   }
-  const file = input.files[0];
   const form = new FormData();
-  form.append('file', file);
+  form.append('file', input.files[0]);
+
   try {
     const res = await apiFetch('/api/upload', { method: 'POST', body: form });
     if (!res.ok) throw new Error('upload');
     const data = await res.json();
     modalImages.push(data.url);
     renderImageList();
-    showToast('Файл жүктелді', 'success');
     input.value = '';
+    showToast('Файл жүктелді', 'success');
   } catch (e) {
-    showToast('Жүктеу сәтсіз', 'error');
+    showToast('Жүктеу сәтсіз аяқталды', 'error');
   }
 }
 
@@ -443,17 +1011,16 @@ function removeImage(index) {
   renderImageList();
 }
 
-// ---- TABS ----
 function showTab(tab, el) {
-  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.tab-page').forEach((page) => page.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach((item) => item.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   el.classList.add('active');
-  document.getElementById('topbar-title').textContent = el.querySelector('svg').nextSibling.textContent.trim();
+  document.getElementById('topbar-title').textContent = el.dataset.title || 'Басқару тақтасы';
   document.getElementById('add-car-btn').style.display = tab === 'cars' ? 'inline-flex' : 'none';
+  closeSidebar();
 }
 
-// ---- LOAD DATA ----
 async function loadAll() {
   await Promise.all([loadStats(), loadCars(), loadTD()]);
 }
@@ -467,8 +1034,8 @@ async function loadStats() {
     document.getElementById('s-td').textContent = s.totalTestDrives;
     document.getElementById('s-pending').textContent = s.pendingTestDrives;
     document.getElementById('td-badge').textContent = s.pendingTestDrives;
-    if (s.pendingTestDrives === 0) document.getElementById('td-badge').style.display = 'none';
-  } catch(e) {}
+    document.getElementById('td-badge').style.display = s.pendingTestDrives === 0 ? 'none' : 'inline-flex';
+  } catch (e) {}
 }
 
 async function loadCars() {
@@ -476,7 +1043,7 @@ async function loadCars() {
     const r = await fetch('/api/cars');
     allCars = await r.json();
     renderCars(allCars);
-  } catch(e) {}
+  } catch (e) {}
 }
 
 async function loadTD() {
@@ -484,30 +1051,33 @@ async function loadTD() {
     const r = await fetch('/api/testdrives');
     allTD = await r.json();
     renderTD(allTD);
-    renderDashTD(allTD.slice(0,6));
-  } catch(e) {}
+    renderDashTD(allTD.slice(0, 6));
+  } catch (e) {}
 }
 
-// ---- RENDER CARS ----
 function renderCars(cars) {
   const body = document.getElementById('cars-body');
-  if (!cars.length) { body.innerHTML = '<tr class="empty-row"><td colspan="6">Автомобильдер жоқ</td></tr>'; return; }
-  body.innerHTML = cars.map(c => `
+  if (!cars.length) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="6">Автомобильдер жоқ</td></tr>';
+    return;
+  }
+
+  body.innerHTML = cars.map((c) => `
     <tr>
-      <td>
+      <td data-label="Автомобиль">
         <div class="car-name-cell">
-          <div class="car-icon-sm"><svg width="28" height="16" viewBox="0 0 200 100" fill="none"><rect x="20" y="40" width="160" height="45" rx="12" fill="#0a0a0a"/><rect x="50" y="20" width="100" height="35" rx="8" fill="#0a0a0a"/><circle cx="55" cy="88" r="14" fill="#555"/><circle cx="145" cy="88" r="14" fill="#555"/></svg></div>
+          <div class="car-icon-sm"><svg width="28" height="16" viewBox="0 0 200 100" fill="none"><rect x="20" y="40" width="160" height="45" rx="12" fill="#0a0a0a"></rect><rect x="50" y="20" width="100" height="35" rx="8" fill="#0a0a0a"></rect><circle cx="55" cy="88" r="14" fill="#555"></circle><circle cx="145" cy="88" r="14" fill="#555"></circle></svg></div>
           <strong>${c.brand} ${c.model}</strong>
         </div>
       </td>
-      <td>${c.year}</td>
-      <td><strong>${c.price.toLocaleString()} ₸</strong></td>
-      <td><span class="badge ${c.status === 'Жаңа' ? 'badge-green' : 'badge-yellow'}">${c.status}</span></td>
-      <td>${c.body}</td>
-      <td>
+      <td data-label="Жылы">${c.year}</td>
+      <td data-label="Баға"><strong>${c.price.toLocaleString()} ₸</strong></td>
+      <td data-label="Статус"><span class="badge ${c.status === 'Жаңа' ? 'badge-green' : 'badge-yellow'}">${c.status}</span></td>
+      <td data-label="Кузов">${c.body}</td>
+      <td data-label="Іс-әрекет">
         <div class="actions">
-          <button class="btn btn-ghost btn-sm" onclick="editCar(${c.id})">Өзгерту</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteCar(${c.id})">Жою</button>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="editCar(${c.id})">Өзгерту</button>
+          <button class="btn btn-danger btn-sm" type="button" onclick="deleteCar(${c.id})">Жою</button>
         </div>
       </td>
     </tr>
@@ -515,28 +1085,29 @@ function renderCars(cars) {
 }
 
 function filterAdminCars(q) {
-  const f = allCars.filter(c => `${c.brand} ${c.model}`.toLowerCase().includes(q.toLowerCase()));
-  renderCars(f);
+  const value = q.toLowerCase();
+  renderCars(allCars.filter((c) => `${c.brand} ${c.model}`.toLowerCase().includes(value)));
 }
 
-// ---- RENDER TEST DRIVES ----
 function renderTD(tds) {
   const body = document.getElementById('td-body');
-  if (!tds.length) { body.innerHTML = '<tr class="empty-row"><td colspan="6">Тест-драйв өтінімдер жоқ</td></tr>'; return; }
-  body.innerHTML = tds.map(t => `
+  if (!tds.length) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="6">Тест-драйв өтінімдер жоқ</td></tr>';
+    return;
+  }
+
+  body.innerHTML = tds.map((t) => `
     <tr>
-      <td><strong>${t.name}</strong></td>
-      <td><a href="tel:${t.phone}" style="color:var(--accent)">${t.phone}</a></td>
-      <td>${t.carName}</td>
-      <td>${t.date} ${t.time}</td>
-      <td>
-        <span class="badge ${t.status === 'Расталды' ? 'badge-green' : t.status === 'Болған жоқ' ? 'badge-red' : 'badge-yellow'}">${t.status}</span>
-      </td>
-      <td>
+      <td data-label="Клиент"><strong>${t.name}</strong></td>
+      <td data-label="Телефон"><a href="tel:${t.phone}" style="color:var(--accent)">${t.phone}</a></td>
+      <td data-label="Автомобиль">${t.carName}</td>
+      <td data-label="Күні / Уақыт">${t.date} ${t.time}</td>
+      <td data-label="Статус"><span class="badge ${t.status === 'Расталды' ? 'badge-green' : t.status === 'Болған жоқ' ? 'badge-red' : 'badge-yellow'}">${t.status}</span></td>
+      <td data-label="Іс-әрекет">
         <div class="actions">
-          ${t.status === 'Күтуде' ? `<button class="btn btn-ghost btn-sm" onclick="updateTDStatus(${t.id},'Расталды')">Растау</button>` : ''}
-          ${t.status !== 'Болған жоқ' ? `<button class="btn btn-ghost btn-sm" onclick="updateTDStatus(${t.id},'Болған жоқ')">Болған жоқ</button>` : ''}
-          <button class="btn btn-danger btn-sm" onclick="deleteTD(${t.id})">Жою</button>
+          ${t.status === 'Күтуде' ? `<button class="btn btn-ghost btn-sm" type="button" onclick="updateTDStatus(${t.id}, 'Расталды')">Растау</button>` : ''}
+          ${t.status !== 'Болған жоқ' ? `<button class="btn btn-ghost btn-sm" type="button" onclick="updateTDStatus(${t.id}, 'Болған жоқ')">Болған жоқ</button>` : ''}
+          <button class="btn btn-danger btn-sm" type="button" onclick="deleteTD(${t.id})">Жою</button>
         </div>
       </td>
     </tr>
@@ -545,38 +1116,85 @@ function renderTD(tds) {
 
 function renderDashTD(tds) {
   const body = document.getElementById('dash-td-body');
-  if (!tds.length) { body.innerHTML = '<tr class="empty-row"><td colspan="5">Тест-драйв өтінімдер жоқ</td></tr>'; return; }
-  body.innerHTML = tds.map(t => `
+  if (!tds.length) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="5">Тест-драйв өтінімдер жоқ</td></tr>';
+    return;
+  }
+
+  body.innerHTML = tds.map((t) => `
     <tr>
-      <td><strong>${t.name}</strong></td>
-      <td>${t.phone}</td>
-      <td>${t.carName}</td>
-      <td>${t.date} ${t.time}</td>
-      <td><span class="badge ${t.status === 'Расталды' ? 'badge-green' : t.status === 'Болған жоқ' ? 'badge-red' : 'badge-yellow'}">${t.status}</span></td>
+      <td data-label="Клиент"><strong>${t.name}</strong></td>
+      <td data-label="Телефон">${t.phone}</td>
+      <td data-label="Автомобиль">${t.carName}</td>
+      <td data-label="Күні">${t.date} ${t.time}</td>
+      <td data-label="Статус"><span class="badge ${t.status === 'Расталды' ? 'badge-green' : t.status === 'Болған жоқ' ? 'badge-red' : 'badge-yellow'}">${t.status}</span></td>
     </tr>
   `).join('');
 }
 
 function filterTD(q) {
-  const f = allTD.filter(t => t.name.toLowerCase().includes(q.toLowerCase()) || t.phone.includes(q) || t.carName.toLowerCase().includes(q.toLowerCase()));
-  renderTD(f);
+  const value = q.toLowerCase();
+  renderTD(allTD.filter((t) => t.name.toLowerCase().includes(value) || t.phone.includes(q) || t.carName.toLowerCase().includes(value)));
 }
 
-// ---- CAR CRUD ----
+function fillCarForm(fields) {
+  const mapping = {
+    brand: 'cm-brand',
+    model: 'cm-model',
+    year: 'cm-year',
+    price: 'cm-price',
+    status: 'cm-status',
+    body: 'cm-body',
+    fuel: 'cm-fuel',
+    transmission: 'cm-transmission',
+    drive: 'cm-drive',
+    color: 'cm-color',
+    engine: 'cm-engine',
+    power: 'cm-power',
+    mileage: 'cm-mileage',
+    description: 'cm-desc',
+    features: 'cm-features'
+  };
+
+  Object.entries(mapping).forEach(([key, id]) => {
+    document.getElementById(id).value = fields[key] ?? '';
+  });
+}
+
 function openCarModal(car = null) {
   editCarId = car ? car.id : null;
   document.getElementById('car-modal-title').textContent = car ? 'Автомобильді өзгерту' : 'Автомобиль қосу';
-  const fields = { brand:'', model:'', year:2024, price:'', status:'Жаңа', body:'Седан', fuel:'Бензин', transmission:'Автомат', drive:'Алдыңғы', color:'', engine:'', power:'', mileage:0, description:'', features:'' };
-  if (car) Object.assign(fields, { ...car, features: (car.features || []).join(', ') });
-  Object.entries(fields).forEach(([k,v]) => {
-    const el = document.getElementById('cm-' + k) || document.getElementById('cm-' + k.replace('description','desc'));
-    if (el) el.value = v;
-  });
-  document.getElementById('cm-desc').value = car ? car.description || '' : '';
+
+  const fields = {
+    brand: '',
+    model: '',
+    year: 2024,
+    price: '',
+    status: 'Жаңа',
+    body: 'Седан',
+    fuel: 'Бензин',
+    transmission: 'Автомат',
+    drive: 'Алдыңғы',
+    color: '',
+    engine: '',
+    power: '',
+    mileage: 0,
+    description: '',
+    features: ''
+  };
+
+  if (car) {
+    Object.assign(fields, {
+      ...car,
+      features: Array.isArray(car.features) ? car.features.join(', ') : ''
+    });
+  }
+
+  fillCarForm(fields);
   modalImages = car && Array.isArray(car.images) ? [...car.images] : [];
-  renderImageList();
   document.getElementById('cm-image-url').value = '';
   document.getElementById('cm-image-file').value = '';
+  renderImageList();
   document.getElementById('car-modal').classList.add('open');
 }
 
@@ -585,7 +1203,7 @@ function closeCarModal(e) {
 }
 
 function editCar(id) {
-  const car = allCars.find(c => c.id === id);
+  const car = allCars.find((item) => item.id === id);
   if (car) openCarModal(car);
 }
 
@@ -593,70 +1211,110 @@ async function saveCar() {
   const data = {
     brand: document.getElementById('cm-brand').value.trim(),
     model: document.getElementById('cm-model').value.trim(),
-    year: parseInt(document.getElementById('cm-year').value),
-    price: parseInt(document.getElementById('cm-price').value),
+    year: parseInt(document.getElementById('cm-year').value, 10),
+    price: parseInt(document.getElementById('cm-price').value, 10),
     status: document.getElementById('cm-status').value,
     body: document.getElementById('cm-body').value,
     fuel: document.getElementById('cm-fuel').value,
     transmission: document.getElementById('cm-transmission').value,
     drive: document.getElementById('cm-drive').value,
-    color: document.getElementById('cm-color').value,
-    engine: document.getElementById('cm-engine').value,
-    power: document.getElementById('cm-power').value,
-    mileage: parseInt(document.getElementById('cm-mileage').value) || 0,
-    description: document.getElementById('cm-desc').value,
-    features: document.getElementById('cm-features').value.split(',').map(s => s.trim()).filter(Boolean),
+    color: document.getElementById('cm-color').value.trim(),
+    engine: document.getElementById('cm-engine').value.trim(),
+    power: document.getElementById('cm-power').value.trim(),
+    mileage: parseInt(document.getElementById('cm-mileage').value, 10) || 0,
+    description: document.getElementById('cm-desc').value.trim(),
+    features: document.getElementById('cm-features').value.split(',').map((item) => item.trim()).filter(Boolean),
     images: modalImages
   };
-  if (!data.brand || !data.model || !data.price) { showToast('Маркасы, моделі және бағасы міндетті!', 'error'); return; }
+
+  if (!data.brand || !data.model || !data.price) {
+    showToast('Маркасы, моделі және бағасы міндетті', 'error');
+    return;
+  }
+
   try {
     if (editCarId) {
-      await apiFetch('/api/cars/' + editCarId, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+      await apiFetch('/api/cars/' + editCarId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
       showToast('Автомобиль жаңартылды', 'success');
     } else {
-      await apiFetch('/api/cars', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+      await apiFetch('/api/cars', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
       showToast('Автомобиль қосылды', 'success');
     }
+
     document.getElementById('car-modal').classList.remove('open');
     await loadAll();
-  } catch(e) { showToast('Қате шықты', 'error'); }
+  } catch (e) {
+    showToast('Сақтау кезінде қате шықты', 'error');
+  }
 }
 
 async function deleteCar(id) {
   if (!confirm('Автомобильді жою керек пе?')) return;
   try {
     await apiFetch('/api/cars/' + id, { method: 'DELETE' });
-    showToast('Жойылды', 'success');
+    showToast('Автомобиль жойылды', 'success');
     await loadAll();
-  } catch(e) { showToast('Қате шықты', 'error'); }
+  } catch (e) {
+    showToast('Жою кезінде қате шықты', 'error');
+  }
 }
 
-// ---- TD CRUD ----
 async function updateTDStatus(id, status) {
   try {
-    await apiFetch('/api/testdrives/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status }) });
+    await apiFetch('/api/testdrives/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
     showToast('Статус жаңартылды', 'success');
     await loadAll();
-  } catch(e) { showToast('Қате шықты', 'error'); }
+  } catch (e) {
+    showToast('Қате шықты', 'error');
+  }
 }
 
 async function deleteTD(id) {
   if (!confirm('Өтінімді жою керек пе?')) return;
   try {
     await apiFetch('/api/testdrives/' + id, { method: 'DELETE' });
-    showToast('Жойылды', 'success');
+    showToast('Өтінім жойылды', 'success');
     await loadAll();
-  } catch(e) { showToast('Қате шықты', 'error'); }
+  } catch (e) {
+    showToast('Қате шықты', 'error');
+  }
 }
 
-// ---- TOAST ----
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast show ' + type;
-  setTimeout(() => t.className = 'toast', 3000);
+  setTimeout(() => { t.className = 'toast'; }, 3000);
 }
 
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 980) closeSidebar();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeSidebar();
+    document.getElementById('car-modal').classList.remove('open');
+  }
+});
+
+document.getElementById('login-password').addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') login();
+});
+
+renderImageList();
 initializeAdmin();
 </script>
 </body>

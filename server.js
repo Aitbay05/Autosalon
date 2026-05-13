@@ -11,14 +11,23 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : null;
+if (DATA_DIR) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+const UPLOADS_DIR = DATA_DIR
+  ? path.join(DATA_DIR, 'uploads')
+  : path.join(__dirname, 'public', 'uploads');
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 const upload = multer({ dest: UPLOADS_DIR });
 const validTokens = new Set();
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
-const DB_PATH = path.join(__dirname, 'data.db');
+const DB_PATH = DATA_DIR
+  ? path.join(DATA_DIR, 'data.db')
+  : path.join(__dirname, 'data.db');
 const db = new sqlite3.Database(DB_PATH);
 
 function parseJsonArray(value) {
@@ -469,5 +478,11 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.ht
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/car/:id', (req, res) => res.sendFile(path.join(__dirname, 'public', 'car.html')));
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`Сервер іске қосылды: http://localhost:${PORT}`));
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = '0.0.0.0';
+
+if (process.env.RENDER && !DATA_DIR) {
+  console.warn('DATA_DIR көрсетілмеген: Render ішінде data.db және uploads уақытша сақталады.');
+}
+
+app.listen(PORT, HOST, () => console.log(`Сервер іске қосылды: http://${HOST}:${PORT}`));
