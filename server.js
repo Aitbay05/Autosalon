@@ -25,11 +25,14 @@ const MIME_TO_EXTENSION = {
   'image/webp': '.webp',
   'image/gif': '.gif',
 };
-const hasCloudinaryConfig = Boolean(
+const UPLOAD_PROVIDER = String(process.env.UPLOAD_PROVIDER || 'local').toLowerCase();
+const wantsCloudinary = UPLOAD_PROVIDER === 'cloudinary';
+const hasCloudinaryCredentials = Boolean(
   process.env.CLOUDINARY_CLOUD_NAME &&
   process.env.CLOUDINARY_API_KEY &&
   process.env.CLOUDINARY_API_SECRET
 );
+const useCloudinary = wantsCloudinary && hasCloudinaryCredentials;
 const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
   : path.join(__dirname, 'data');
@@ -75,7 +78,7 @@ function fileFilter(_req, file, cb) {
 }
 
 // ─── Cloudinary баптау ───────────────────────────────────────────────────────
-if (hasCloudinaryConfig) {
+if (useCloudinary) {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -85,7 +88,7 @@ if (hasCloudinaryConfig) {
   ensureUploadDir();
 }
 
-const storage = hasCloudinaryConfig
+const storage = useCloudinary
   ? new CloudinaryStorage({
       cloudinary,
       params: {
@@ -307,7 +310,7 @@ app.post('/api/upload', authenticate, (req, res) => {
       return res.status(400).json({ error: 'Файл таңдалмады' });
     }
 
-    const url = hasCloudinaryConfig
+    const url = useCloudinary
       ? (req.file.path || req.file.secure_url)
       : `/uploads/${req.file.filename}`;
 
@@ -433,15 +436,18 @@ const HOST = '0.0.0.0';
 async function startServer() {
   await initializeDatabase();
 
-  if (!hasCloudinaryConfig) {
-    console.warn('⚠️  CLOUDINARY env vars жоқ — суреттер жергілікті uploads бумасына сақталады.');
+  if (wantsCloudinary && !hasCloudinaryCredentials) {
+    console.warn('⚠️  UPLOAD_PROVIDER=cloudinary, бірақ CLOUDINARY env vars толық емес.');
+    console.warn(`   Fallback storage: Local disk (${UPLOAD_DIR})`);
+  } else if (!useCloudinary) {
+    console.warn('⚠️  Cloudinary өшірулі — суреттер жергілікті uploads бумасына сақталады.');
     console.warn(`   Local upload path: ${UPLOAD_DIR}`);
   }
 
   app.listen(PORT, HOST, () => {
     console.log(`✅ Сервер іске қосылды: http://${HOST}:${PORT}`);
     console.log(`📦 Database: PostgreSQL`);
-    console.log(`🖼️  Storage: ${hasCloudinaryConfig ? 'Cloudinary' : `Local disk (${UPLOAD_DIR})`}`);
+    console.log(`🖼️  Storage: ${useCloudinary ? 'Cloudinary' : `Local disk (${UPLOAD_DIR})`}`);
   });
 }
 
