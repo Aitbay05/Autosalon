@@ -11,25 +11,108 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+const MAX_IMAGE_UPLOAD_BYTES = 15 * 1024 * 1024;
+const UPLOAD_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
+const UPLOAD_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
+const MIME_TO_EXTENSION = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+};
+const hasCloudinaryConfig = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, 'data');
+const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
+
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(UPLOAD_DIR));
+
+function getFileExtension(file) {
+  const originalName = typeof file.originalname === 'string' ? file.originalname : '';
+  const originalExt = path.extname(originalName).toLowerCase();
+  if (UPLOAD_EXTENSIONS.has(originalExt)) return originalExt;
+  return MIME_TO_EXTENSION[file.mimetype] || null;
+}
+
+function ensureUploadDir() {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+function sanitizeBaseName(fileName) {
+  const baseName = path.basename(fileName || 'image', path.extname(fileName || ''));
+  const normalized = baseName
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60);
+  return normalized || 'image';
+}
+
+function fileFilter(_req, file, cb) {
+  const extension = getFileExtension(file);
+  const hasAllowedMimeType = !file.mimetype || UPLOAD_MIME_TYPES.has(file.mimetype);
+
+  if (extension && hasAllowedMimeType) {
+    cb(null, true);
+    return;
+  }
+
+  const err = new Error('Тек JPG, PNG, WebP немесе GIF файлдарын жүктеуге болады');
+  err.status = 400;
+  cb(err);
+}
 
 // ─── Cloudinary баптау ───────────────────────────────────────────────────────
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+if (hasCloudinaryConfig) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+} else {
+  ensureUploadDir();
+}
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: 'autoprime',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-    transformation: [{ width: 1200, height: 800, crop: 'limit', quality: 'auto' }],
-  },
-});
+const storage = hasCloudinaryConfig
+  ? new CloudinaryStorage({
+      cloudinary,
+      params: {
+        folder: 'autoprime',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        transformation: [{ width: 1200, height: 800, crop: 'limit', quality: 'auto' }],
+      },
+    })
+  : multer.diskStorage({
+      destination: (_req, _file, cb) => {
+        ensureUploadDir();
+        cb(null, UPLOAD_DIR);
+      },
+      filename: (_req, file, cb) => {
+        const extension = getFileExtension(file) || '.jpg';
+        const baseName = sanitizeBaseName(file.originalname);
+        const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        cb(null, `${uniqueSuffix}-${baseName}${extension}`);
+      },
+    });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: MAX_IMAGE_UPLOAD_BYTES },
+});
+const uploadSingleImage = upload.single('file');
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 const validTokens = new Set();
@@ -210,12 +293,26 @@ app.post('/api/login', (req, res) => {
   res.json({ token });
 });
 
-// ─── Upload route (Cloudinary) ────────────────────────────────────────────────
-app.post('/api/upload', authenticate, upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'Файл таңдалмады' });
-  // Cloudinary URL: req.file.path немесе req.file.secure_url
-  const url = req.file.path || req.file.secure_url;
-  res.json({ url });
+// ─── Upload route ─────────────────────────────────────────────────────────────
+app.post('/api/upload', authenticate, (req, res) => {
+  uploadSingleImage(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Файл өлшемі 15 МБ-тан аспауы керек' });
+      }
+      return res.status(err.status || 500).json({ error: err.message || 'Файлды жүктеу мүмкін болмады' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Файл таңдалмады' });
+    }
+
+    const url = hasCloudinaryConfig
+      ? (req.file.path || req.file.secure_url)
+      : `/uploads/${req.file.filename}`;
+
+    res.json({ url });
+  });
 });
 
 // ─── Cars routes ──────────────────────────────────────────────────────────────
@@ -336,16 +433,15 @@ const HOST = '0.0.0.0';
 async function startServer() {
   await initializeDatabase();
 
-  // Cloudinary тексеру
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-    console.warn('⚠️  CLOUDINARY env vars жоқ — сурет жүктеу жұмыс істемейді!');
-    console.warn('   CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET қосыңыз.');
+  if (!hasCloudinaryConfig) {
+    console.warn('⚠️  CLOUDINARY env vars жоқ — суреттер жергілікті uploads бумасына сақталады.');
+    console.warn(`   Local upload path: ${UPLOAD_DIR}`);
   }
 
   app.listen(PORT, HOST, () => {
     console.log(`✅ Сервер іске қосылды: http://${HOST}:${PORT}`);
     console.log(`📦 Database: PostgreSQL`);
-    console.log(`🖼️  Storage: Cloudinary`);
+    console.log(`🖼️  Storage: ${hasCloudinaryConfig ? 'Cloudinary' : `Local disk (${UPLOAD_DIR})`}`);
   });
 }
 
