@@ -873,8 +873,7 @@ let allCars = [];
 let allTD = [];
 let editCarId = null;
 let modalImages = [];
-const ADMIN_TOKEN_KEY = 'admin_token';
-let adminToken = localStorage.getItem(ADMIN_TOKEN_KEY);
+let adminToken = null;
 
 async function apiFetch(url, options = {}) {
   options.headers = options.headers || {};
@@ -906,22 +905,14 @@ function showLoginScreen(show) {
   document.getElementById('logout-btn').style.display = show ? 'none' : 'inline-flex';
   if (show) {
     document.getElementById('topbar-title').textContent = 'Кіру';
+    document.getElementById('login-password').value = '';
   }
   closeSidebar();
 }
 
 async function initializeAdmin() {
-  if (!adminToken) {
-    showLoginScreen(true);
-    return;
-  }
-  try {
-    await loadAll();
-    showLoginScreen(false);
-  } catch (e) {
-    clearToken();
-    showLoginScreen(true);
-  }
+  clearToken();
+  showLoginScreen(true);
 }
 
 async function login() {
@@ -941,7 +932,6 @@ async function login() {
     if (!res.ok) throw new Error('auth');
     const data = await res.json();
     adminToken = data.token;
-    localStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
     showLoginScreen(false);
     await loadAll();
   } catch (e) {
@@ -951,7 +941,7 @@ async function login() {
 
 function clearToken() {
   adminToken = null;
-  localStorage.removeItem(ADMIN_TOKEN_KEY);
+  localStorage.removeItem('admin_token');
 }
 
 function logout() {
@@ -1313,6 +1303,11 @@ document.addEventListener('keydown', (event) => {
 
 document.getElementById('login-password').addEventListener('keydown', (event) => {
   if (event.key === 'Enter') login();
+});
+
+window.addEventListener('pagehide', clearToken);
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) initializeAdmin();
 });
 
 renderImageList();
