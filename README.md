@@ -31,6 +31,38 @@ node server.js
 
 ---
 
+## Render-де дерек жоғалмауы үшін
+
+Бұл жоба енді негізгі деректерді `Render PostgreSQL` ішінде сақтайды. Автомобильдер, өтінімдер және админ енгізген өзгерістер `DATABASE_URL` арқылы Postgres-ке жазылады. Local filesystem тек жүктелген суреттер үшін қолданылады.
+
+### Міндетті баптау
+
+1. Render ішінен `Postgres` жасаңыз.
+2. Web service Environment Variables ішіне `DATABASE_URL` қосыңыз.
+3. Егер сурет жүктеу қолданылса, `Persistent Disk` қосыңыз.
+4. Disk `Mount Path` ретінде `/var/data` көрсетіңіз.
+5. Environment Variables ішінде `DATA_DIR=/var/data` орнатыңыз.
+6. Қайта deploy жасаңыз.
+
+Сервер `DATABASE_URL` болмаса іске қосылмайды. `DATA_DIR` көрсетілмесе де Render ішінде `/var/data` әдепкі жолы қолданылады, бірақ суреттер сақталуы үшін disk дәл сол жолға mount етілуі керек.
+
+### Маңызды ескерту
+
+- Postgres деректері persistent disk-ке тәуелді емес, олар Render Postgres ішінде сақталады.
+- Persistent disk тек uploads сияқты файлдарды сақтау үшін керек.
+- `public/uploads/` емес, Render-де `/var/data/uploads` қолданылады.
+
+### Ұсынылатын Render env vars
+
+```env
+DATABASE_URL=postgresql://...
+DATA_DIR=/var/data
+ADMIN_USER=admin
+ADMIN_PASSWORD=strong-password
+```
+
+---
+
 ## API маршруттары
 
 ### Автомобильдер
