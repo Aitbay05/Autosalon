@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const multer = require('multer');
 const { Pool } = require('pg');
 require('dotenv').config();
@@ -11,18 +12,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const DEFAULT_RENDER_DATA_DIR = '/var/data';
-const DATA_DIR = process.env.DATA_DIR
-  ? path.resolve(process.env.DATA_DIR)
-  : (process.env.RENDER ? DEFAULT_RENDER_DATA_DIR : null);
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : null;
 
 if (DATA_DIR) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
+const DEFAULT_RENDER_UPLOADS_DIR = path.join(os.tmpdir(), 'autosalon-uploads');
 const UPLOADS_DIR = DATA_DIR
   ? path.join(DATA_DIR, 'uploads')
-  : path.join(__dirname, 'public', 'uploads');
+  : (process.env.RENDER ? DEFAULT_RENDER_UPLOADS_DIR : path.join(__dirname, 'public', 'uploads'));
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const upload = multer({ dest: UPLOADS_DIR });
@@ -540,8 +539,8 @@ const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
 
 if (process.env.RENDER && !process.env.DATA_DIR) {
-  console.warn(`DATA_DIR көрсетілмеген. Render ішінде әдепкі бума қолданылады: ${DEFAULT_RENDER_DATA_DIR}.`);
-  console.warn('Postgres дерегі сақталады, бірақ жүктелген суреттер жоғалмауы үшін uploads бумасына persistent disk керек.');
+  console.warn(`DATA_DIR көрсетілмеген. Uploads уақытша бумаға сақталады: ${DEFAULT_RENDER_UPLOADS_DIR}.`);
+  console.warn('Postgres дерегі сақталады, бірақ жүктелген суреттер deploy/restart сайын жоғалмауы үшін persistent disk қосып, DATA_DIR орнатыңыз.');
 }
 
 async function startServer() {

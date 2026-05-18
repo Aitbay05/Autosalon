@@ -44,13 +44,14 @@ node server.js
 5. Environment Variables ішінде `DATA_DIR=/var/data` орнатыңыз.
 6. Қайта deploy жасаңыз.
 
-Сервер `DATABASE_URL` болмаса іске қосылмайды. `DATA_DIR` көрсетілмесе де Render ішінде `/var/data` әдепкі жолы қолданылады, бірақ суреттер сақталуы үшін disk дәл сол жолға mount етілуі керек.
+Сервер `DATABASE_URL` болмаса іске қосылмайды. `DATA_DIR` міндетті емес: ол тек persistent disk қосқанда керек. Егер `DATA_DIR` қойылмаса, Render ішінде uploads уақытша `/tmp/autosalon-uploads` бумасына сақталады.
 
 ### Маңызды ескерту
 
 - Postgres деректері persistent disk-ке тәуелді емес, олар Render Postgres ішінде сақталады.
 - Persistent disk тек uploads сияқты файлдарды сақтау үшін керек.
-- `public/uploads/` емес, Render-де `/var/data/uploads` қолданылады.
+- Persistent disk қоспасаңыз, суреттер deploy/restart сайын жоғалуы мүмкін.
+- Disk қолдансаңыз, Render-де `/var/data/uploads` қолданылады.
 
 ### Ұсынылатын Render env vars
 
